@@ -1,13 +1,16 @@
-import bunyan, { stdSerializers } from 'bunyan';
+import { hrtime } from 'process';
 
-let logger = null;
+import bunyan, { stdSerializers } from 'bunyan';
+import { v4 as uuid } from 'uuid';
+
+let log = null;
 
 const proxy = new Proxy(
   {},
   {
     get(target, name, receiver) {
-      if (!logger) throw new Error('Logger has not been initialized yet: run createLogger() first');
-      return logger[name];
+      if (!log) throw new Error('log has not been initialized yet: run createLogger() first');
+      return log[name];
     }
   }
 );
@@ -29,13 +32,43 @@ const serializers = {
   err: stdSerializers.err
 };
 
-export const createLogger = ({ name, version = '' } = {}) => {
-  if (!name) throw new Error('A name must be specified for the logger');
-  logger = bunyan.createLogger({
+export const createLogger = ({ name, version = '', level = 'info' } = {}) => {
+  if (!name) throw new Error('A name must be specified for the log');
+  log = bunyan.createLogger({
     name: `${name}${version ? `@${version}` : ''}`,
-    serializers
+    serializers,
+    stream: process.stdout,
+    level
   });
-  return logger;
+  return log;
 };
+
+export const requestLogger = async (ctx, next) => {
+  const startedAt = hrtime.bigint();
+  const requestId = uuid();
+  const correlationId = ctx.get('X-Correlation-ID') || uuid();
+
+  if (log.fields.name) ctx.set('X-Powered-By', log.fields.name);
+
+  ctx.set('X-Request-ID', requestId);
+  ctx.set('X-Correlation-ID', correlationId);
+
+  log.info({ request: ctx.request, requestId, correlationId });
+
+  ctx.log = log.child({ requestId });
+
+  await next();
+
+  // eslint-disable-next-line no-undef
+  const responseTime = Number((hrtime.bigint() - startedAt) / BigInt(1e6)) / 1e3;
+  ctx.response.responseTime = responseTime;
+  ctx.set('X-Response-Time', `${responseTime}`);
+
+  log.info({
+    response: ctx.response,
+    requestId,
+    correlationId,
+  });
+}
 
 export default proxy;

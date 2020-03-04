@@ -1,0 +1,51 @@
+{
+  "name": "@adventurousway/logger",
+  "version": "0.0.1",
+  "description": "Standardized stream-based logging for Adventurous Way",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "babel --delete-dir-on-start -d ./lib ./src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adventurousway/node-logger.git",
+    "version": "npm run build",
+    "postversion": "git push && git push --tags && npm publish --access public"
+  },
+  "keywords": [
+    "log",
+    "logging",
+    "logger"
+  ],
+  "author": "Matt Knight <matt@adventurousway.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/adventurousway/node-logger/issues"
+  },
+  "homepage": "https://github.com/adventurousway/node-logger#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.8.6",
+    "@babel/preset-env": "^7.8.6"
+  },
+  "engines": {
+    "node": ">= 12.0.0"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
+    ],
+    "plugins": []
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {}
+}

@@ -5,13 +5,13 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "babel --delete-dir-on-start -d ./lib ./src",
-    "dev": "babel --delete-dir-on-start --verbose -w -d ./lib ./src"
+    "dev": "babel --delete-dir-on-start --verbose -w -d ./lib ./src",
+    "version": "npm run build",
+    "postversion": "git push && git push --tags && npm publish --access public"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/adventurousway/node-logger.git",
-    "version": "npm run build",
-    "postversion": "git push && git push --tags && npm publish --access public"
+    "url": "git+https://github.com/adventurousway/node-logger.git"
   },
   "keywords": [
     "log",

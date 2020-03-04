@@ -1,6 +1,6 @@
 {
   "name": "@adventurousway/logger",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Standardized stream-based logging for Adventurous Way",
   "main": "lib/index.js",
   "scripts": {

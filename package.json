@@ -4,7 +4,8 @@
   "description": "Standardized stream-based logging for Adventurous Way",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel --delete-dir-on-start -d ./lib ./src"
+    "build": "babel --delete-dir-on-start -d ./lib ./src",
+    "dev": "babel --delete-dir-on-start --verbose -w -d ./lib ./src"
   },
   "repository": {
     "type": "git",
@@ -47,5 +48,7 @@
   "directories": {
     "lib": "lib"
   },
-  "dependencies": {}
+  "dependencies": {
+    "bunyan": "^1.8.12"
+  }
 }

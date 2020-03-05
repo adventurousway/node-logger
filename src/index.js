@@ -32,13 +32,20 @@ const serializers = {
   err: stdSerializers.err
 };
 
-export const createLogger = ({ name, version = '', level = 'info' } = {}) => {
+export const createLogger = ({ name, version = null, level = 'info' } = {}) => {
   if (!name) throw new Error('A name must be specified for the log');
+
+  const fullName = `${name}${version ? `@${version}` : ''}`;
   log = bunyan.createLogger({
-    name: `${name}${version ? `@${version}` : ''}`,
+    name: fullName,
     serializers,
     stream: process.stdout,
-    level
+    level,
+    app: {
+      name,
+      version,
+      fullName
+    }
   });
   return log;
 };
@@ -67,8 +74,8 @@ export const requestLogger = async (ctx, next) => {
   log.info({
     response: ctx.response,
     requestId,
-    correlationId,
+    correlationId
   });
-}
+};
 
 export default proxy;

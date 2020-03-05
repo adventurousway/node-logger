@@ -60,9 +60,11 @@ export const requestLogger = async (ctx, next) => {
   ctx.set('X-Request-ID', requestId);
   ctx.set('X-Correlation-ID', correlationId);
 
-  log.info({ request: ctx.request, requestId, correlationId });
+  ctx.correlationId = correlationId;
 
-  ctx.log = log.child({ requestId });
+  ctx.log = log.child({ requestId, correlationId });
+
+  ctx.log.info({ request: ctx.request, requestId }, 'HTTP Request');
 
   await next();
 
@@ -71,11 +73,7 @@ export const requestLogger = async (ctx, next) => {
   ctx.response.responseTime = responseTime;
   ctx.set('X-Response-Time', `${responseTime}`);
 
-  log.info({
-    response: ctx.response,
-    requestId,
-    correlationId
-  });
+  ctx.log.info({ response: ctx.response }, 'HTTP Response');
 };
 
 export default proxy;

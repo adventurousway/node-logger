@@ -32,48 +32,68 @@ const serializers = {
   err: stdSerializers.err
 };
 
-export const createLogger = ({ name, version = null, level = 'info' } = {}) => {
+export const createLogger = ({
+  name,
+  version = null,
+  level = 'info',
+  shouldLogApp = process.env.NODE_ENV === 'production'
+} = {}) => {
   if (!name) throw new Error('A name must be specified for the log');
 
   const fullName = `${name}${version ? `@${version}` : ''}`;
-  log = bunyan.createLogger({
+
+  const options = {
     name: fullName,
     serializers,
     stream: process.stdout,
-    level,
-    app: {
+    level
+  };
+
+  if (shouldLogApp) {
+    options.app = {
       name,
       version,
       fullName
-    }
-  });
+    };
+  }
+
+  log = bunyan.createLogger(options);
   return log;
 };
 
-export const requestLogger = async (ctx, next) => {
-  const startedAt = hrtime.bigint();
-  const requestId = uuid();
-  const correlationId = ctx.get('X-Correlation-ID') || uuid();
+export const createRequestLogger = ({
+  logRequests = process.env.NODE_ENV === 'production',
+  logResponses = process.env.NODE_ENV === 'production',
+} = {}) => {
+  return async (ctx, next) => {
+    const startedAt = hrtime.bigint();
+    const requestId = uuid();
+    const correlationId = ctx.get('X-Correlation-ID') || uuid();
 
-  if (log.fields.name) ctx.set('X-Powered-By', log.fields.name);
+    if (log.fields.name) ctx.set('X-Powered-By', log.fields.name);
 
-  ctx.set('X-Request-ID', requestId);
-  ctx.set('X-Correlation-ID', correlationId);
+    ctx.set('X-Request-ID', requestId);
+    ctx.set('X-Correlation-ID', correlationId);
 
-  ctx.correlationId = correlationId;
+    ctx.correlationId = correlationId;
 
-  ctx.log = log.child({ requestId, correlationId });
+    ctx.log = log.child({ requestId, correlationId });
 
-  ctx.log.info({ request: ctx.request, requestId }, 'HTTP Request');
+    if (logRequests) {
+      ctx.log.info({ request: ctx.request, requestId }, 'HTTP Request');
+    }
 
-  await next();
+    await next();
 
-  // eslint-disable-next-line no-undef
-  const responseTime = Number((hrtime.bigint() - startedAt) / BigInt(1e6)) / 1e3;
-  ctx.response.responseTime = responseTime;
-  ctx.set('X-Response-Time', `${responseTime}`);
+    // eslint-disable-next-line no-undef
+    const responseTime = Number((hrtime.bigint() - startedAt) / BigInt(1e6)) / 1e3;
+    ctx.response.responseTime = responseTime;
+    ctx.set('X-Response-Time', `${responseTime}`);
 
-  ctx.log.info({ response: ctx.response }, 'HTTP Response');
+    if (logResponses) {
+      ctx.log.info({ response: ctx.response }, 'HTTP Response');
+    }
+  };
 };
 
 export default proxy;
